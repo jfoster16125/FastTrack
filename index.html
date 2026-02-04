@@ -732,6 +732,24 @@ async function hashPassword(string) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// EMERGENCY RESET: If stuck on "Authenticating..." for 3 seconds, force logout option
+setTimeout(() => {
+  const userDisplay = document.getElementById('user-display');
+  // If we still see the default text or "Authenticating..."
+  if (userDisplay.innerText.includes("Auth") || userDisplay.innerText === "...") {
+     console.log("Stuck in login loop. Forcing logout option.");
+     userDisplay.innerText = "⚠️ Tap to Reset";
+     userDisplay.style.color = "red";
+     // Ensure it's clickable even if other things are broken
+     userDisplay.onclick = function() {
+         if(confirm("Reset App Data?")) {
+             localStorage.clear();
+             location.reload();
+         }
+     };
+  }
+}, 3000);
+
   </script>
 </body>
 </html>
