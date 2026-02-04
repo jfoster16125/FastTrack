@@ -1,4 +1,4 @@
-# FastTrack Secure 🚀
+# FastTrack 🚀
 
 A lightweight, serverless fasting tracker that runs entirely in the browser and uses **Google Sheets** as your personal, private cloud database.
 
