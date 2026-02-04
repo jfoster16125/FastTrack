@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0f172a">
-  <title>FastTrack</title>
+  <title>FastTrack Secure</title>
 
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3240/3240652.png">
   <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3240/3240652.png">
@@ -41,7 +41,7 @@
 
   <div class="w-full max-w-md flex justify-between items-center p-6 z-20">
     <div>
-      <h1 class="text-xl font-bold text-slate-300 leading-none">FastTrack <span class="text-xs text-orange-500 align-top">Complete</span></h1>
+      <h1 class="text-xl font-bold text-slate-300 leading-none">FastTrack <span class="text-xs text-orange-500 align-top">SECURE</span></h1>
       <p id="user-display" onclick="showLogoutModal()" class="text-xs text-slate-500 font-mono mt-1 cursor-pointer hover:text-red-400 transition-colors">
         Authenticating...
       </p>
@@ -148,12 +148,19 @@
 
   <script>
     // --- CONFIGURATION ---
-    // Ensure this URL matches your deployed Google Apps Script Web App URL
     const CLOUD_URL = "https://script.google.com/macros/s/AKfycbxxOxHC_YaLg7e-vN1WOco3eN9nsRi867l7jwONV0G5gEqme_URKbpnkjM7D95UgMUDUg/exec"; 
     const DB_KEY = "fastTrackData_v2";
     const AUTH_KEY = "fastTrackAuth_v1";
 
     let auth = { user: null, pass: null };
+
+    // --- UTILS: PASSWORD HASHING ---
+    async function hashPassword(string) {
+      const msgBuffer = new TextEncoder().encode(string);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
 
     // --- AUTH SYSTEM ---
     function checkLogin() {
@@ -168,20 +175,15 @@
       }
     }
 
-    function performLogin() {
+    async function performLogin() {
       const user = document.getElementById('login-user').value.trim();
       const pass = document.getElementById('login-pass').value.trim();
        
       if (!user || !pass) return alert("Please fill both fields");
-       
-      // ... inside performLogin() ...
-if (!user || !pass) return alert("Please fill both fields");
 
-// HASH THE PASSWORD BEFORE SAVING
-const hashedPass = await hashPassword(pass);
-auth = { user: user, pass: hashedPass };
-
-localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+      // HASH THE PASSWORD BEFORE SAVING
+      const hashedPass = await hashPassword(pass);
+      auth = { user: user, pass: hashedPass };
 
       localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
        
@@ -253,7 +255,6 @@ localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
              const cloudData = await cloudRes.json();
              
              let newDB = [];
-             // Import history
              if (cloudData.history) {
                cloudData.history.forEach(h => {
                  newDB.push({
@@ -266,7 +267,6 @@ localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
                  });
                });
              }
-             // Import current fast
              if (cloudData.currentFast) {
                newDB.push({
                  id: Number(cloudData.currentFast.startTime),
@@ -454,8 +454,6 @@ localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
       const container = document.getElementById('phase-list');
       container.innerHTML = '';
       
-      
-
       phases.forEach((phase, index) => {
         const nextPhase = phases[index + 1];
         const isCurrent = currentHours >= phase.h && (!nextPhase || currentHours < nextPhase.h);
@@ -540,10 +538,9 @@ localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
         return;
       }
        
-      // 1. Calculate Streak (Keep logic based on Newest->Oldest)
+      // 1. Calculate Streak
       let currentStreak = 0;
       for (let i = 0; i < history.length; i++) {
-          // If the most recent fasts meet the goal, increment streak
           if (parseFloat(history[i].duration) >= (history[i].goal || 0)) currentStreak++;
           else break; 
       }
@@ -555,12 +552,10 @@ localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
       avgBadge.innerText = `${(total / history.length).toFixed(1)}h Avg`;
 
       // 2. PREPARE CHART DATA
-      // Create a reversed copy so the graph reads Left (Oldest) -> Right (Newest)
       const chartHistory = [...history].reverse(); 
 
       const labels = chartHistory.map(h => h.date);
       const dataPoints = chartHistory.map(h => h.duration);
-      // Only map weight if it exists, otherwise null allows the line to span gaps
       const weights = chartHistory.map(h => (h.weight && Number(h.weight) > 0) ? h.weight : null); 
       const colors = chartHistory.map(h => parseFloat(h.duration) >= (h.goal || 16) ? '#22c55e' : '#f97316');
 
@@ -578,7 +573,7 @@ localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
                 borderColor: '#38bdf8', 
                 yAxisID: 'y1', 
                 spanGaps: true,
-                tension: 0.4 // Makes the weight line slightly curvy/smooth
+                tension: 0.4
             }, 
             { 
                 label: 'Hours', 
@@ -624,7 +619,6 @@ localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
     // 2. Main Toggle (Start / End)
     async function handleToggle() {
       if (!startTime) {
-        // STARTING
         const selectedGoal = document.getElementById('goal-input').value;
         const res = await localApi("toggleFast", { goalHours: selectedGoal });
         if (res && res.status === "Started") {
@@ -634,9 +628,8 @@ localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
           updateUI();
         }
       } else {
-        // ENDING - Ask for Time Adjustment
         const hoursAgo = await askUser("End Fast", "Finished how many hours ago? (0 for now)", "0");
-        if (hoursAgo === null) return; // User cancelled
+        if (hoursAgo === null) return; 
         
         let customEndTime = null;
         if (parseFloat(hoursAgo) > 0) {
@@ -660,14 +653,12 @@ localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
     // 3. Time Travel (Adjust Start)
     async function handleAdjustStart() {
       if (!startTime) {
-        // Not running yet: Start in the past
         const hoursAgo = await askUser("Start Time", "Started how many hours ago?", "e.g., 2.5");
         if (!hoursAgo || isNaN(hoursAgo)) return;
         const pastTime = new Date().getTime() - (parseFloat(hoursAgo) * 60 * 60 * 1000);
         const res = await localApi("toggleFast", { goalHours: document.getElementById('goal-input').value, customStartTime: pastTime });
         if (res) { startTime = res.startTime; goalHours = res.goal; timerInterval = setInterval(updateUI, 1000); updateUI(); }
       } else {
-        // Already running: Edit current start time
         const hoursAgo = await askUser("Edit Start", "Actually started how many hours ago?", "e.g. 5");
         if (!hoursAgo || isNaN(hoursAgo)) return;
         const pastTime = new Date().getTime() - (parseFloat(hoursAgo) * 60 * 60 * 1000);
@@ -721,35 +712,24 @@ localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
         updateUI();
       }
     }
+    
     window.onload = checkLogin;
-	
-	
-	// Helper: One-way scramble (Hash) the password
-async function hashPassword(string) {
-  const msgBuffer = new TextEncoder().encode(string);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
 
-// EMERGENCY RESET: If stuck on "Authenticating..." for 3 seconds, force logout option
-setTimeout(() => {
-  const userDisplay = document.getElementById('user-display');
-  // If we still see the default text or "Authenticating..."
-  if (userDisplay.innerText.includes("Auth") || userDisplay.innerText === "...") {
-     console.log("Stuck in login loop. Forcing logout option.");
-     userDisplay.innerText = "⚠️ Tap to Reset";
-     userDisplay.style.color = "red";
-     // Ensure it's clickable even if other things are broken
-     userDisplay.onclick = function() {
-         if(confirm("Reset App Data?")) {
-             localStorage.clear();
-             location.reload();
-         }
-     };
-  }
-}, 3000);
-
+    // EMERGENCY RESET: If stuck on "Authenticating..." for 3 seconds, force logout option
+    setTimeout(() => {
+      const userDisplay = document.getElementById('user-display');
+      if (userDisplay.innerText.includes("Auth") || userDisplay.innerText === "...") {
+         console.log("Stuck in login loop. Forcing logout option.");
+         userDisplay.innerText = "⚠️ Tap to Reset";
+         userDisplay.style.color = "red";
+         userDisplay.onclick = function() {
+             if(confirm("Reset App Data?")) {
+                 localStorage.clear();
+                 location.reload();
+             }
+         };
+      }
+    }, 3000);
   </script>
 </body>
 </html>
