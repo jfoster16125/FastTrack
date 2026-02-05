@@ -60,11 +60,18 @@
     <svg class="w-full h-full absolute" viewBox="0 0 120 120">
       <circle cx="60" cy="60" r="54" fill="none" stroke="#1e293b" stroke-width="8" />
       <circle id="progress-ring" class="progress-ring__circle" cx="60" cy="60" r="54" fill="none" stroke="#f97316" stroke-width="8" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="339.292" />
+      
+      <circle cx="60" cy="60" r="42" fill="none" stroke="#1e293b" stroke-width="6" />
+      <circle id="countdown-ring" class="progress-ring__circle" cx="60" cy="60" r="42" fill="none" stroke="#3b82f6" stroke-width="6" stroke-linecap="round" stroke-dasharray="263.89" stroke-dashoffset="0" />
     </svg>
+
     <div class="z-10 text-center flex flex-col items-center">
       <div id="timer-display" onclick="handleAdjustStart()" class="text-5xl font-mono font-light tracking-tighter cursor-pointer hover:text-orange-400 transition-colors select-none" title="Tap to edit start time">00:00:00</div>
       
-      <p id="timer-label" class="text-slate-400 text-sm mt-2 font-medium">Loading...</p>
+      <div id="countdown-display" class="text-xl font-mono text-blue-400 font-bold mb-1 hidden">-00:00:00</div>
+
+      <p id="timer-label" class="text-slate-400 text-sm mt-1 font-medium">Loading...</p>
+      
       <div id="goal-selector" class="mt-4 hidden">
         <select id="goal-input" class="bg-slate-800 border border-slate-600 text-white text-sm rounded-lg block w-full p-2.5 focus:ring-orange-500 focus:border-orange-500">
           <option value="16" selected>16h (16:8)</option>
@@ -363,7 +370,8 @@
     let goalHours = 16;
     let timerInterval = null;
     let myChart = null;
-    const circumference = 54 * 2 * Math.PI;
+    const circumference = 54 * 2 * Math.PI;       // Outer Ring
+    const innerCircumference = 42 * 2 * Math.PI;  // Inner Ring (~263.89)
 
     // --- VERBOSE PHASES DATA ---
     const phases = [
@@ -490,9 +498,14 @@
       const selector = document.getElementById('goal-selector');
       const label = document.getElementById('timer-label');
       const adjustLink = document.getElementById('adjust-container');
+      const countDisplay = document.getElementById('countdown-display');
+      const countRing = document.getElementById('countdown-ring');
        
       if (!startTime) {
         document.getElementById('timer-display').innerText = "00:00:00";
+        countDisplay.classList.add('hidden'); // Hide countdown when stopped
+        countRing.style.strokeDashoffset = 0; // Reset ring to full
+        
         label.innerText = "Target Goal:";
         label.classList.remove("text-orange-400");
         btn.innerText = "Start Fasting";
@@ -506,18 +519,50 @@
 
       selector.style.display = 'none';
       adjustLink.classList.add('hidden');
+      countDisplay.classList.remove('hidden'); // Show countdown
+      
       btn.innerText = "End Fast";
       btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-md py-4 bg-red-500 hover:bg-red-600 active:scale-95 rounded-2xl text-xl font-bold shadow-2xl z-20 transition-all";
        
       const diff = new Date().getTime() - startTime;
+      
+      // 1. Update Main Timer (Elapsed)
       const totalHours = diff / 3600000;
       const h = Math.floor(totalHours);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
       document.getElementById('timer-display').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 
+      // 2. Update Progress Ring (Outer - Orange)
       const percent = Math.min((totalHours / goalHours) * 100, 100);
       setProgress(percent);
+
+      // 3. Update Countdown Timer (Text & Inner Ring)
+      const goalMillis = goalHours * 3600000;
+      const remainingMillis = goalMillis - diff;
+
+      if (remainingMillis > 0) {
+        // Countdown Text
+        const rH = Math.floor(remainingMillis / 3600000);
+        const rM = Math.floor((remainingMillis % 3600000) / 60000);
+        const rS = Math.floor((remainingMillis % 60000) / 1000);
+        countDisplay.innerText = `-${rH}:${rM.toString().padStart(2,'0')}:${rS.toString().padStart(2,'0')}`;
+        countDisplay.className = "text-xl font-mono text-blue-400 font-bold mb-1"; // Blue when counting down
+        
+        // Inner Ring Logic (Shrinks as time passes)
+        const remainingPercent = remainingMillis / goalMillis;
+        const innerOffset = innerCircumference - (remainingPercent * innerCircumference);
+        countRing.style.strokeDashoffset = innerOffset;
+        countRing.style.stroke = "#3b82f6"; // Blue
+      } else {
+        // Overtime Logic
+        countDisplay.innerText = "BONUS ZONE";
+        countDisplay.className = "text-xl font-bold text-green-500 mb-1 animate-pulse";
+        countRing.style.strokeDashoffset = innerCircumference; // Empty
+        countRing.style.stroke = "#22c55e"; // Green
+      }
+
+      // 4. Update Labels
       if (percent >= 100) {
         label.innerText = "GOAL REACHED! 🎉";
         label.classList.add("text-orange-400");
@@ -734,11 +779,4 @@
     }, 3000);
   </script>
 </body>
-
 </html>
-
-
-
-
-
-
