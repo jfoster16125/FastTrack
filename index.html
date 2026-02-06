@@ -227,7 +227,7 @@
       localStorage.setItem(DB_KEY, JSON.stringify(data));
     }
 
-    // --- HYBRID API MANAGER (LOCAL + CLOUD) ---
+    // --- HYBRID API MANAGER (LOCAL FIRST, BACKGROUND SYNC) ---
     async function localApi(action, payload) {
       let db = getDB();
       const params = new URLSearchParams();
@@ -235,6 +235,7 @@
       params.append("password", auth.pass);
       params.append("action", action);
       
+      // LOG WEIGHT (Instant Return)
       if (action === "logWeight") {
         if (db.length > 0) {
             db[db.length - 1].weight = payload.weight;
@@ -242,11 +243,13 @@
         }
         if (CLOUD_URL) {
             params.append("weight", payload.weight);
-            await fetch(CLOUD_URL, { method: 'POST', mode: 'no-cors', body: params });
+            // BACKGROUND SYNC - NO AWAIT
+            fetch(CLOUD_URL, { method: 'POST', mode: 'no-cors', body: params }).catch(e => console.log("Sync Error", e));
         }
         return { status: "logged" };
       }
 
+      // INITIAL DATA SYNC (Reads need await, but only on first load)
       if (action === "getInitialData") {
         if ((db.length === 0 || payload.force) && CLOUD_URL && auth.user) {
            console.log("Syncing with cloud...");
@@ -304,8 +307,10 @@
         };
       }
 
+      // TOGGLE FAST (Instant Return)
       if (action === "toggleFast") {
         const activeIndex = db.findIndex(f => f.status === "ACTIVE");
+        let result = null;
 
         if (activeIndex === -1) {
           // --- STARTING ---
@@ -318,9 +323,10 @@
             params.append("mode", "START");
             params.append("goalHours", payload.goalHours);
             if (payload.customStartTime) params.append("customStartTime", startTime);
-            await fetch(CLOUD_URL, { method: 'POST', mode: 'no-cors', body: params });
+            // BACKGROUND SYNC - NO AWAIT
+            fetch(CLOUD_URL, { method: 'POST', mode: 'no-cors', body: params }).catch(e => console.log("Sync Error", e));
           }
-          return { status: "Started", startTime: startTime, goal: payload.goalHours || 16 };
+          result = { status: "Started", startTime: startTime, goal: payload.goalHours || 16 };
         } else {
           // --- ENDING ---
           const endTime = payload.customEndTime || Date.now();
@@ -333,12 +339,15 @@
             params.append("mode", "END");
             if (payload.customEndTime) params.append("customEndTime", endTime);
             if (payload.weight) params.append("weight", payload.weight);
-            await fetch(CLOUD_URL, { method: 'POST', mode: 'no-cors', body: params });
+            // BACKGROUND SYNC - NO AWAIT
+            fetch(CLOUD_URL, { method: 'POST', mode: 'no-cors', body: params }).catch(e => console.log("Sync Error", e));
           }
-          return { status: "Ended" };
+          result = { status: "Ended" };
         }
+        return result; // RETURNS INSTANTLY
       }
 
+      // ADJUST START (Instant Return)
       if (action === "adjustStart") {
         const activeIndex = db.findIndex(f => f.status === "ACTIVE");
         if (activeIndex !== -1 && payload.customStartTime) {
@@ -348,7 +357,8 @@
                 params.append("mode", "ADJUST_START");
                 params.append("customStartTime", payload.customStartTime);
                 params.append("action", "toggleFast");
-                await fetch(CLOUD_URL, { method: 'POST', mode: 'no-cors', body: params });
+                // BACKGROUND SYNC - NO AWAIT
+                fetch(CLOUD_URL, { method: 'POST', mode: 'no-cors', body: params }).catch(e => console.log("Sync Error", e));
             }
             return { status: "Started", startTime: payload.customStartTime, goal: db[activeIndex].goal };
         }
@@ -547,7 +557,6 @@
       if (!startTime) {
         // --- NEW START LOGIC (Unified) ---
         const nowStr = toLocalISOString(new Date());
-        // Default to Now, but allow edit
         const pickedDate = await askUser("Start Fast", "Confirm start time:", nowStr, "datetime-local");
         
         if (!pickedDate) return; // Cancelled
@@ -584,7 +593,6 @@
     }
 
     async function handleAdjustStart() {
-      // ONLY USED FOR EDITING ACTIVE START NOW
       if (startTime) {
         const currentStartStr = toLocalISOString(new Date(startTime));
         const pickedDate = await askUser("Edit Start", "Correct start time:", currentStartStr, "datetime-local");
