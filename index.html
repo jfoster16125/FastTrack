@@ -37,6 +37,11 @@
     .phase-detail ul { list-style-type: disc; padding-left: 1.2rem; margin-top: 0.5rem; color: #94a3b8; font-size: 0.9rem; }
     .phase-detail strong { color: #f97316; }
     .phase-detail p { margin-bottom: 0.5rem; }
+
+    /* Custom Input Style for Date Picker */
+    input[type="datetime-local"] {
+        color-scheme: dark;
+    }
   </style>
 </head>
 <body class="bg-slate-900 text-white min-h-screen flex flex-col items-center pb-64 no-scrollbar">
@@ -60,16 +65,13 @@
     <svg class="w-full h-full absolute" viewBox="0 0 120 120">
       <circle cx="60" cy="60" r="54" fill="none" stroke="#1e293b" stroke-width="8" />
       <circle id="progress-ring" class="progress-ring__circle" cx="60" cy="60" r="54" fill="none" stroke="#f97316" stroke-width="8" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="339.292" />
-      
       <circle cx="60" cy="60" r="42" fill="none" stroke="#1e293b" stroke-width="6" />
       <circle id="countdown-ring" class="progress-ring__circle" cx="60" cy="60" r="42" fill="none" stroke="#3b82f6" stroke-width="6" stroke-linecap="round" stroke-dasharray="263.89" stroke-dashoffset="0" />
     </svg>
 
     <div class="z-10 text-center flex flex-col items-center">
       <div id="timer-display" onclick="handleAdjustStart()" class="text-5xl font-mono font-light tracking-tighter cursor-pointer hover:text-orange-400 transition-colors select-none" title="Tap to edit start time">00:00:00</div>
-      
       <div id="countdown-display" class="text-xl font-mono text-blue-400 font-bold mb-1 hidden">-00:00:00</div>
-
       <p id="timer-label" class="text-slate-400 text-sm mt-1 font-medium">Loading...</p>
       
       <div id="goal-selector" class="mt-4 hidden">
@@ -99,23 +101,23 @@
     <div id="phase-list" class="space-y-3"></div>
   </div>
 
-  <button id="main-btn" onclick="handleToggle()" class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-md py-4 bg-orange-500 hover:bg-orange-600 active:scale-95 rounded-2xl text-xl font-bold shadow-2xl z-20 transition-all">
+  <button id="main-btn" onclick="handleToggle()" class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-md py-4 bg-orange-500 hover:bg-orange-600 active:scale-95 rounded-2xl text-xl font-bold shadow-2xl z-30 transition-all">
     Wait...
   </button>
    
-  <div id="adjust-container" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-20 text-xs text-slate-500 underline cursor-pointer hover:text-orange-400 transition-colors hidden" onclick="handleAdjustStart()">
+  <div id="adjust-container" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 text-sm text-orange-400 font-bold underline cursor-pointer hover:text-white transition-colors hidden px-4 py-2" onclick="handleAdjustStart()">
     Started earlier?
   </div>
 
-  <div id="modal-overlay" onclick="closeModal()" class="fixed inset-0 bg-black/80 hidden z-30 backdrop-blur-sm transition-opacity"></div>
-  <div id="modal" class="fixed bottom-0 left-0 right-0 bg-slate-800 rounded-t-[2.5rem] p-8 z-40 border-t border-slate-700 max-h-[85vh] overflow-y-auto">
+  <div id="modal-overlay" onclick="closeModal()" class="fixed inset-0 bg-black/80 hidden z-40 backdrop-blur-sm transition-opacity"></div>
+  <div id="modal" class="fixed bottom-0 left-0 right-0 bg-slate-800 rounded-t-[2.5rem] p-8 z-50 border-t border-slate-700 max-h-[85vh] overflow-y-auto">
     <div class="w-12 h-1.5 bg-slate-600 rounded-full mx-auto mb-6"></div>
     <h2 id="modal-title" class="text-2xl font-bold text-orange-400"></h2>
     <div id="modal-content" class="text-slate-300 leading-relaxed space-y-4 text-lg mt-4 phase-detail"></div>
     <button onclick="closeModal()" class="mt-8 w-full py-4 bg-slate-700 rounded-xl font-bold">Close</button>
   </div>
 
-  <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 hidden">
+  <div id="login-modal" class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900 hidden">
     <div class="w-[85%] max-w-sm p-8 text-center">
       <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl text-3xl">🚀</div>
       <h2 class="text-2xl font-bold text-white mb-2">Welcome Back</h2>
@@ -131,7 +133,7 @@
     </div>
   </div>
 
-  <div id="logout-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+  <div id="logout-modal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
     <div class="bg-slate-800 border border-slate-700 w-[85%] max-w-sm p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300" id="logout-box">
       <div class="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-4 text-2xl">👋</div>
       <h3 class="text-xl font-bold text-white mb-2">Sign Out?</h3>
@@ -143,11 +145,11 @@
     </div>
   </div>
 
-  <div id="input-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+  <div id="input-modal" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
     <div class="bg-slate-800 border border-slate-700 w-[85%] max-w-sm p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300" id="input-box">
       <h3 id="input-title" class="text-xl font-bold text-white mb-2">Input</h3>
       <p id="input-desc" class="text-slate-400 text-sm mb-4">Enter value below:</p>
-      <input id="input-field" type="number" step="0.1" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-4 text-white text-lg mb-6 focus:ring-2 focus:ring-orange-500 outline-none" />
+      <input id="input-field" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-4 text-white text-lg mb-6 focus:ring-2 focus:ring-orange-500 outline-none" />
       <div class="flex gap-3">
         <button id="input-cancel-btn" class="flex-1 py-3 bg-slate-700 text-slate-300 rounded-xl font-bold">Cancel</button>
         <button id="input-confirm-btn" class="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold shadow-lg">Save</button>
@@ -187,19 +189,15 @@
     async function performLogin() {
       const user = document.getElementById('login-user').value.trim();
       const pass = document.getElementById('login-pass').value.trim();
-       
       if (!user || !pass) return alert("Please fill both fields");
 
-      // HASH THE PASSWORD BEFORE SAVING
       const hashedPass = await hashPassword(pass);
       auth = { user: user, pass: hashedPass };
 
       localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
-       
       document.getElementById('login-modal').classList.add('hidden');
       document.getElementById('user-display').innerText = auth.user;
       document.getElementById('user-display').classList.add("text-orange-400");
-       
       initData(true); 
     }
 
@@ -241,7 +239,6 @@
       params.append("password", auth.pass);
       params.append("action", action);
       
-      // LOG WEIGHT INDEPENDENTLY
       if (action === "logWeight") {
         if (db.length > 0) {
             db[db.length - 1].weight = payload.weight;
@@ -254,7 +251,6 @@
         return { status: "logged" };
       }
 
-      // INITIAL DATA SYNC
       if (action === "getInitialData") {
         if ((db.length === 0 || payload.force) && CLOUD_URL && auth.user) {
            console.log("Syncing with cloud...");
@@ -312,7 +308,6 @@
         };
       }
 
-      // TOGGLE FAST (START / END)
       if (action === "toggleFast") {
         const activeIndex = db.findIndex(f => f.status === "ACTIVE");
 
@@ -348,7 +343,6 @@
         }
       }
 
-      // ADJUST ACTIVE START TIME
       if (action === "adjustStart") {
         const activeIndex = db.findIndex(f => f.status === "ACTIVE");
         if (activeIndex !== -1 && payload.customStartTime) {
@@ -371,88 +365,15 @@
     let timerInterval = null;
     let myChart = null;
     const circumference = 54 * 2 * Math.PI;       // Outer Ring
-    const innerCircumference = 42 * 2 * Math.PI;  // Inner Ring (~263.89)
+    const innerCircumference = 42 * 2 * Math.PI;  // Inner Ring
 
-    // --- VERBOSE PHASES DATA ---
     const phases = [
-      { 
-        h: 0, 
-        title: "Anabolic", 
-        icon: "🍔", 
-        detail: `
-          <p><strong>Digestion Mode</strong></p>
-          <p>Your body is processing your last meal. Insulin levels rise to shuttle glucose into cells for energy or storage.</p>
-          <ul>
-            <li>Blood sugar rises</li>
-            <li>Insulin spikes</li>
-            <li>Glycogen stores refill</li>
-          </ul>`
-      },
-      { 
-        h: 4, 
-        title: "Catabolic", 
-        icon: "📉", 
-        detail: `
-          <p><strong>Blood Sugar Falls</strong></p>
-          <p>Food has been digested. Insulin starts to drop, signaling your body to start using stored energy (glycogen) from the liver.</p>
-          <ul>
-            <li>Digestive system rests</li>
-            <li>Ghrelin (hunger) may spike</li>
-            <li>Healing mode begins</li>
-          </ul>`
-      },
-      { 
-        h: 12, 
-        title: "Fat Burn", 
-        icon: "🔥", 
-        detail: `
-          <p><strong>Metabolic Switch</strong></p>
-          <p>Liver glycogen is running low. Your body transitions to burning stored body fat for fuel. You are entering mild ketosis.</p>
-          <ul>
-            <li>HGH (Human Growth Hormone) begins to rise</li>
-            <li>Fat cells release energy</li>
-            <li>Mental clarity improves</li>
-          </ul>`
-      },
-      { 
-        h: 18, 
-        title: "Ketosis", 
-        icon: "🧠", 
-        detail: `
-          <p><strong>Full Fat Burning</strong></p>
-          <p>You are now running primarily on Ketones. This is a high-performance state for the brain and body.</p>
-          <ul>
-            <li>Deep fat burning mode</li>
-            <li>Reduced inflammation</li>
-            <li>Brain-Derived Neurotrophic Factor (BDNF) rises</li>
-          </ul>`
-      },
-      { 
-        h: 24, 
-        title: "Autophagy", 
-        icon: "♻️", 
-        detail: `
-          <p><strong>Cellular Cleanup</strong></p>
-          <p>Your cells begin to recycle old, damaged components (organelles and proteins). This is deep anti-aging on a cellular level.</p>
-          <ul>
-            <li>"Self-eating" of junk cells</li>
-            <li>Immune system reset begins</li>
-            <li>Gut lining repair</li>
-          </ul>`
-      },
-      { 
-        h: 48, 
-        title: "HGH Surge", 
-        icon: "💪", 
-        detail: `
-          <p><strong>Peak Repair</strong></p>
-          <p>Human Growth Hormone levels skyrocket (up to 5x) to preserve muscle mass and accelerate healing.</p>
-          <ul>
-            <li>Massive HGH increase</li>
-            <li>Metabolic rate actually increases</li>
-            <li>Deepest level of cellular repair</li>
-          </ul>`
-      }
+      { h: 0, title: "Anabolic", icon: "🍔", detail: `<p><strong>Digestion Mode</strong></p><p>Processing last meal. Insulin rises, glycogen stores refill.</p>` },
+      { h: 4, title: "Catabolic", icon: "📉", detail: `<p><strong>Blood Sugar Falls</strong></p><p>Insulin drops. Digestion ends. Healing begins.</p>` },
+      { h: 12, title: "Fat Burn", icon: "🔥", detail: `<p><strong>Metabolic Switch</strong></p><p>Glycogen low. Body starts burning fat. Mild ketosis.</p>` },
+      { h: 18, title: "Ketosis", icon: "🧠", detail: `<p><strong>Full Fat Burning</strong></p><p>Running on Ketones. High performance state.</p>` },
+      { h: 24, title: "Autophagy", icon: "♻️", detail: `<p><strong>Cellular Cleanup</strong></p><p>Recycling old cells. Deep anti-aging.</p>` },
+      { h: 48, title: "HGH Surge", icon: "💪", detail: `<p><strong>Peak Repair</strong></p><p>HGH skyrockets to preserve muscle and heal.</p>` }
     ];
 
     function setProgress(percent) {
@@ -503,14 +424,14 @@
        
       if (!startTime) {
         document.getElementById('timer-display').innerText = "00:00:00";
-        countDisplay.classList.add('hidden'); // Hide countdown when stopped
-        countRing.style.strokeDashoffset = 0; // Reset ring to full
+        countDisplay.classList.add('hidden'); 
+        countRing.style.strokeDashoffset = 0; 
         
         label.innerText = "Target Goal:";
         label.classList.remove("text-orange-400");
         btn.innerText = "Start Fasting";
-        btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-md py-4 bg-orange-500 hover:bg-orange-600 active:scale-95 rounded-2xl text-xl font-bold shadow-2xl z-20 transition-all";
-        adjustLink.classList.remove('hidden');
+        btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-md py-4 bg-orange-500 hover:bg-orange-600 active:scale-95 rounded-2xl text-xl font-bold shadow-2xl z-30 transition-all";
+        adjustLink.classList.remove('hidden'); 
         selector.style.display = 'block';
         setProgress(0);
         renderPhases(-1);
@@ -518,51 +439,43 @@
       }
 
       selector.style.display = 'none';
-      adjustLink.classList.add('hidden');
-      countDisplay.classList.remove('hidden'); // Show countdown
+      adjustLink.classList.add('hidden'); 
+      countDisplay.classList.remove('hidden'); 
       
       btn.innerText = "End Fast";
-      btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-md py-4 bg-red-500 hover:bg-red-600 active:scale-95 rounded-2xl text-xl font-bold shadow-2xl z-20 transition-all";
+      btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-md py-4 bg-red-500 hover:bg-red-600 active:scale-95 rounded-2xl text-xl font-bold shadow-2xl z-30 transition-all";
        
       const diff = new Date().getTime() - startTime;
-      
-      // 1. Update Main Timer (Elapsed)
       const totalHours = diff / 3600000;
       const h = Math.floor(totalHours);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
       document.getElementById('timer-display').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 
-      // 2. Update Progress Ring (Outer - Orange)
       const percent = Math.min((totalHours / goalHours) * 100, 100);
       setProgress(percent);
 
-      // 3. Update Countdown Timer (Text & Inner Ring)
       const goalMillis = goalHours * 3600000;
       const remainingMillis = goalMillis - diff;
 
       if (remainingMillis > 0) {
-        // Countdown Text
         const rH = Math.floor(remainingMillis / 3600000);
         const rM = Math.floor((remainingMillis % 3600000) / 60000);
         const rS = Math.floor((remainingMillis % 60000) / 1000);
         countDisplay.innerText = `-${rH}:${rM.toString().padStart(2,'0')}:${rS.toString().padStart(2,'0')}`;
-        countDisplay.className = "text-xl font-mono text-blue-400 font-bold mb-1"; // Blue when counting down
+        countDisplay.className = "text-xl font-mono text-blue-400 font-bold mb-1"; 
         
-        // Inner Ring Logic (Shrinks as time passes)
         const remainingPercent = remainingMillis / goalMillis;
         const innerOffset = innerCircumference - (remainingPercent * innerCircumference);
         countRing.style.strokeDashoffset = innerOffset;
-        countRing.style.stroke = "#3b82f6"; // Blue
+        countRing.style.stroke = "#3b82f6"; 
       } else {
-        // Overtime Logic
         countDisplay.innerText = "BONUS ZONE";
         countDisplay.className = "text-xl font-bold text-green-500 mb-1 animate-pulse";
-        countRing.style.strokeDashoffset = innerCircumference; // Empty
-        countRing.style.stroke = "#22c55e"; // Green
+        countRing.style.strokeDashoffset = innerCircumference;
+        countRing.style.stroke = "#22c55e"; 
       }
 
-      // 4. Update Labels
       if (percent >= 100) {
         label.innerText = "GOAL REACHED! 🎉";
         label.classList.add("text-orange-400");
@@ -584,8 +497,6 @@
         container.classList.add('hidden');
         return;
       }
-       
-      // 1. Calculate Streak
       let currentStreak = 0;
       for (let i = 0; i < history.length; i++) {
           if (parseFloat(history[i].duration) >= (history[i].goal || 0)) currentStreak++;
@@ -598,9 +509,7 @@
       const total = history.reduce((sum, item) => sum + parseFloat(item.duration), 0);
       avgBadge.innerText = `${(total / history.length).toFixed(1)}h Avg`;
 
-      // 2. PREPARE CHART DATA
       const chartHistory = [...history].reverse(); 
-
       const labels = chartHistory.map(h => h.date);
       const dataPoints = chartHistory.map(h => h.duration);
       const weights = chartHistory.map(h => (h.weight && Number(h.weight) > 0) ? h.weight : null); 
@@ -613,59 +522,37 @@
         data: {
           labels: labels,
           datasets: [
-            { 
-                label: 'Weight', 
-                data: weights, 
-                type: 'line', 
-                borderColor: '#38bdf8', 
-                yAxisID: 'y1', 
-                spanGaps: true,
-                tension: 0.4
-            }, 
-            { 
-                label: 'Hours', 
-                data: dataPoints, 
-                backgroundColor: colors, 
-                borderRadius: 4, 
-                yAxisID: 'y' 
-            }
+            { label: 'Weight', data: weights, type: 'line', borderColor: '#38bdf8', yAxisID: 'y1', spanGaps: true, tension: 0.4 }, 
+            { label: 'Hours', data: dataPoints, backgroundColor: colors, borderRadius: 4, yAxisID: 'y' }
           ]
         },
         options: {
-          responsive: true, 
-          maintainAspectRatio: false, 
-          plugins: { legend: { display: false } },
-          scales: { 
-              y: { display: false }, 
-              y1: { 
-                  display: true, 
-                  position: 'right', 
-                  grid: { display: false }, 
-                  ticks: { color: '#38bdf8', font: { size: 10 } } 
-              }, 
-              x: { 
-                  grid: { display: false }, 
-                  ticks: { color: '#64748b' } 
-              } 
-          }
+          responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+          scales: { y: { display: false }, y1: { display: true, position: 'right', grid: { display: false }, ticks: { color: '#38bdf8', font: { size: 10 } } }, x: { grid: { display: false }, ticks: { color: '#64748b' } } }
         }
       });
     }
 
     // --- INTERACTION HANDLERS ---
     
-    // 1. Log Weight Button
-    async function handleLogWeight() {
-        const w = await askUser("Log Weight", "Enter current weight:", "lbs / kg");
-        if (w) {
-            await localApi("logWeight", { weight: w });
-            initData(); 
-        }
+    // Helper: ISO Date String for Inputs
+    function toLocalISOString(date) {
+      const pad = (n) => n.toString().padStart(2, '0');
+      return date.getFullYear() +
+        '-' + pad(date.getMonth() + 1) +
+        '-' + pad(date.getDate()) +
+        'T' + pad(date.getHours()) +
+        ':' + pad(date.getMinutes());
     }
 
-    // 2. Main Toggle (Start / End)
+    async function handleLogWeight() {
+        const w = await askUser("Log Weight", "Enter current weight:", "lbs / kg");
+        if (w) { await localApi("logWeight", { weight: w }); initData(); }
+    }
+
     async function handleToggle() {
       if (!startTime) {
+        // START LOGIC
         const selectedGoal = document.getElementById('goal-input').value;
         const res = await localApi("toggleFast", { goalHours: selectedGoal });
         if (res && res.status === "Started") {
@@ -675,16 +562,18 @@
           updateUI();
         }
       } else {
-        const hoursAgo = await askUser("End Fast", "Finished how many hours ago? (0 for now)", "0");
-        if (hoursAgo === null) return; 
+        // END LOGIC
+        const nowStr = toLocalISOString(new Date());
+        const pickedDate = await askUser("End Fast", "When did you finish?", nowStr, "datetime-local");
         
+        if (pickedDate === null) return; // User cancelled
+
         let customEndTime = null;
-        if (parseFloat(hoursAgo) > 0) {
-            customEndTime = new Date().getTime() - (parseFloat(hoursAgo) * 60 * 60 * 1000);
+        if (pickedDate) {
+            customEndTime = new Date(pickedDate).getTime();
         }
 
         const res = await localApi("toggleFast", { customEndTime: customEndTime });
-        
         if (res) {
           if (!customEndTime && (new Date().getTime() - startTime) / 3600000 >= goalHours) {
               confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
@@ -697,19 +586,25 @@
       }
     }
 
-    // 3. Time Travel (Adjust Start)
     async function handleAdjustStart() {
       if (!startTime) {
-        const hoursAgo = await askUser("Start Time", "Started how many hours ago?", "e.g., 2.5");
-        if (!hoursAgo || isNaN(hoursAgo)) return;
-        const pastTime = new Date().getTime() - (parseFloat(hoursAgo) * 60 * 60 * 1000);
+        // STARTING IN PAST
+        const nowStr = toLocalISOString(new Date());
+        const pickedDate = await askUser("Start Time", "When did you start?", nowStr, "datetime-local");
+        
+        if (!pickedDate) return;
+        const pastTime = new Date(pickedDate).getTime();
+
         const res = await localApi("toggleFast", { goalHours: document.getElementById('goal-input').value, customStartTime: pastTime });
         if (res) { startTime = res.startTime; goalHours = res.goal; timerInterval = setInterval(updateUI, 1000); updateUI(); }
       } else {
-        const hoursAgo = await askUser("Edit Start", "Actually started how many hours ago?", "e.g. 5");
-        if (!hoursAgo || isNaN(hoursAgo)) return;
-        const pastTime = new Date().getTime() - (parseFloat(hoursAgo) * 60 * 60 * 1000);
+        // EDITING ACTIVE START
+        const currentStartStr = toLocalISOString(new Date(startTime));
+        const pickedDate = await askUser("Edit Start", "Correct start time:", currentStartStr, "datetime-local");
         
+        if (!pickedDate) return;
+        const pastTime = new Date(pickedDate).getTime();
+
         const res = await localApi("adjustStart", { customStartTime: pastTime });
         if (res) { startTime = res.startTime; updateUI(); }
       }
@@ -729,18 +624,29 @@
       document.getElementById('modal').classList.remove('open');
     }
 
-    function askUser(title, desc, placeholder = "") {
+    function askUser(title, desc, placeholder = "", type = "text") {
       return new Promise((resolve) => {
         const modal = document.getElementById('input-modal');
         const box = document.getElementById('input-box');
         const input = document.getElementById('input-field');
+        
         document.getElementById('input-title').innerText = title;
         document.getElementById('input-desc').innerText = desc;
-        input.placeholder = placeholder;
-        input.value = '';
+        
+        // Dynamic Input Type handling
+        input.type = type;
+        if (type === "datetime-local" && placeholder) {
+            input.value = placeholder; // Sets default time
+        } else {
+            input.placeholder = placeholder;
+            input.value = '';
+        }
+
         modal.classList.remove('hidden');
         setTimeout(() => { modal.classList.remove('opacity-0'); box.classList.remove('scale-95'); box.classList.add('scale-100'); input.focus(); }, 10);
+        
         function close(value) { modal.classList.add('opacity-0'); box.classList.remove('scale-100'); box.classList.add('scale-95'); setTimeout(() => modal.classList.add('hidden'), 300); resolve(value); }
+        
         document.getElementById('input-confirm-btn').onclick = () => close(input.value);
         document.getElementById('input-cancel-btn').onclick = () => close(null);
         input.onkeydown = (e) => { if (e.key === "Enter") close(input.value); };
@@ -762,7 +668,6 @@
     
     window.onload = checkLogin;
 
-    // EMERGENCY RESET: If stuck on "Authenticating..." for 3 seconds, force logout option
     setTimeout(() => {
       const userDisplay = document.getElementById('user-display');
       if (userDisplay.innerText.includes("Auth") || userDisplay.innerText === "...") {
