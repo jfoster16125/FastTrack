@@ -104,11 +104,7 @@
   <button id="main-btn" onclick="handleToggle()" class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-md py-4 bg-orange-500 hover:bg-orange-600 active:scale-95 rounded-2xl text-xl font-bold shadow-2xl z-30 transition-all">
     Wait...
   </button>
-   
-  <div id="adjust-container" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 text-sm text-orange-400 font-bold underline cursor-pointer hover:text-white transition-colors hidden px-4 py-2" onclick="handleAdjustStart()">
-    Started earlier?
-  </div>
-
+  
   <div id="modal-overlay" onclick="closeModal()" class="fixed inset-0 bg-black/80 hidden z-40 backdrop-blur-sm transition-opacity"></div>
   <div id="modal" class="fixed bottom-0 left-0 right-0 bg-slate-800 rounded-t-[2.5rem] p-8 z-50 border-t border-slate-700 max-h-[85vh] overflow-y-auto">
     <div class="w-12 h-1.5 bg-slate-600 rounded-full mx-auto mb-6"></div>
@@ -418,7 +414,6 @@
       const btn = document.getElementById('main-btn');
       const selector = document.getElementById('goal-selector');
       const label = document.getElementById('timer-label');
-      const adjustLink = document.getElementById('adjust-container');
       const countDisplay = document.getElementById('countdown-display');
       const countRing = document.getElementById('countdown-ring');
        
@@ -431,7 +426,6 @@
         label.classList.remove("text-orange-400");
         btn.innerText = "Start Fasting";
         btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-md py-4 bg-orange-500 hover:bg-orange-600 active:scale-95 rounded-2xl text-xl font-bold shadow-2xl z-30 transition-all";
-        adjustLink.classList.remove('hidden'); 
         selector.style.display = 'block';
         setProgress(0);
         renderPhases(-1);
@@ -439,7 +433,6 @@
       }
 
       selector.style.display = 'none';
-      adjustLink.classList.add('hidden'); 
       countDisplay.classList.remove('hidden'); 
       
       btn.innerText = "End Fast";
@@ -552,9 +545,16 @@
 
     async function handleToggle() {
       if (!startTime) {
-        // START LOGIC
+        // --- NEW START LOGIC (Unified) ---
+        const nowStr = toLocalISOString(new Date());
+        // Default to Now, but allow edit
+        const pickedDate = await askUser("Start Fast", "Confirm start time:", nowStr, "datetime-local");
+        
+        if (!pickedDate) return; // Cancelled
+        const startTs = new Date(pickedDate).getTime();
         const selectedGoal = document.getElementById('goal-input').value;
-        const res = await localApi("toggleFast", { goalHours: selectedGoal });
+
+        const res = await localApi("toggleFast", { goalHours: selectedGoal, customStartTime: startTs });
         if (res && res.status === "Started") {
           startTime = res.startTime;
           goalHours = res.goal;
@@ -562,16 +562,13 @@
           updateUI();
         }
       } else {
-        // END LOGIC
+        // --- END LOGIC ---
         const nowStr = toLocalISOString(new Date());
         const pickedDate = await askUser("End Fast", "When did you finish?", nowStr, "datetime-local");
         
-        if (pickedDate === null) return; // User cancelled
+        if (!pickedDate) return; // Cancelled
 
-        let customEndTime = null;
-        if (pickedDate) {
-            customEndTime = new Date(pickedDate).getTime();
-        }
+        let customEndTime = new Date(pickedDate).getTime();
 
         const res = await localApi("toggleFast", { customEndTime: customEndTime });
         if (res) {
@@ -587,18 +584,8 @@
     }
 
     async function handleAdjustStart() {
-      if (!startTime) {
-        // STARTING IN PAST
-        const nowStr = toLocalISOString(new Date());
-        const pickedDate = await askUser("Start Time", "When did you start?", nowStr, "datetime-local");
-        
-        if (!pickedDate) return;
-        const pastTime = new Date(pickedDate).getTime();
-
-        const res = await localApi("toggleFast", { goalHours: document.getElementById('goal-input').value, customStartTime: pastTime });
-        if (res) { startTime = res.startTime; goalHours = res.goal; timerInterval = setInterval(updateUI, 1000); updateUI(); }
-      } else {
-        // EDITING ACTIVE START
+      // ONLY USED FOR EDITING ACTIVE START NOW
+      if (startTime) {
         const currentStartStr = toLocalISOString(new Date(startTime));
         const pickedDate = await askUser("Edit Start", "Correct start time:", currentStartStr, "datetime-local");
         
